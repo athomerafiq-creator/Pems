@@ -402,10 +402,12 @@ begin
     mods := '{"dashboard":"view","calendar":"view","tasks":"edit","contacts":"view","documents":"edit","portfolio":"none","finance":"entry","payroll":"none","meetings":"view","chat":"edit","attendance":"view","warnings":"view","travel":"view","reports":"view"}';
     wss := array['Big7Placements','AGL Group'];
   else
+    -- unknown people start switched OFF; the Principal turns them on in Settings
     mods := '{"dashboard":"view","tasks":"edit","chat":"edit","attendance":"view","warnings":"view"}';
   end if;
-  insert into profiles(id, email, name, title, role, color)
-    values (new.id, new.email, nm, ttl, 'assistant', case when em = 'pstocoo.ishc@gmail.com' then '#be185d' else '#0e7490' end)
+  insert into profiles(id, email, name, title, role, color, active)
+    values (new.id, new.email, nm, ttl, 'assistant', case when em = 'pstocoo.ishc@gmail.com' then '#be185d' else '#0e7490' end,
+            em in ('pstocoo.ishc@gmail.com','support@revenuehelper.org'))
     on conflict (id) do nothing;
   for k in select jsonb_object_keys(mods) loop
     insert into permissions(user_id, module, level) values (new.id, k, mods->>k) on conflict do nothing;

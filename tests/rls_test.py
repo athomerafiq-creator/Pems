@@ -61,6 +61,8 @@ check("principal sees all 3 appointments", val("select count(*) from appointment
 check("PA sees 2 (no personal)", val("select count(*) from appointments", A1) == "2")
 check("PA02 sees 1 (only its workspaces)", val("select count(*) from appointments", A2) == "1")
 check("stranger sees nothing", val("select count(*) from appointments", X) == "0")
+check("stranger starts switched off", val(f"select active from profiles where id='{X}'") == "f")
+check("stranger cannot read general chat", val("select count(*) from chat_messages", X) == "0")
 check("PA cannot see focus items", val("select count(*) from focus_items", A1) == "0")
 check("PA cannot see finance", val("select count(*) from transactions", A1) == "0")
 check("PA02 cannot see principal's finance", val("select count(*) from transactions", A2) == "0")
