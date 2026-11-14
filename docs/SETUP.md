@@ -58,16 +58,12 @@ Each person gets an email → clicks the link → sets their own password (10+ c
 
 Anyone else you invite later starts **switched off**; turn them on in Settings.
 
-## Step 6 — Keep the free database awake (2 minutes)
+## Step 6 — Keep the free database awake
 
-Free Supabase projects pause after 7 days with no use. To be safe:
-GitHub → this repo → **Settings** → **Secrets and variables** → **Actions** →
-**New repository secret**:
-
-* `SUPABASE_URL` = the Project URL
-* `SUPABASE_ANON_KEY` = the anon key
-
-The included workflow pings the database once a day.
+Free Supabase projects pause after 7 days with no use. The included GitHub workflow
+(`.github/workflows/keepalive.yml`) pings the database once a day automatically, using the
+public values in `public/config.js`. Nothing to set up. To check it: GitHub → **Actions** →
+*keep-supabase-awake* → green ✓.
 
 ---
 

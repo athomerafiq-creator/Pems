@@ -1,7 +1,7 @@
 # Free Supabase projects pause after 7 days without activity.
 # This job makes one small read every day so PEMS never pauses.
-# Needs two repository secrets: SUPABASE_URL and SUPABASE_ANON_KEY
-# (GitHub → Settings → Secrets and variables → Actions → New repository secret).
+# It reads the public Supabase URL and anon key from public/config.js
+# (both are public by design), so no secrets are needed.
 name: keep-supabase-awake
 on:
   schedule:
@@ -11,10 +11,10 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Ping Supabase
-        env:
-          URL: ${{ secrets.SUPABASE_URL }}
-          KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          if [ -z "$URL" ]; then echo "Secrets not set yet - skipping"; exit 0; fi
-          curl -fsS "$URL/rest/v1/workspaces?select=id&limit=1" -H "apikey: $KEY" -o /dev/null && echo "awake"
+          URL=$(grep -o "https://[a-z0-9]*\.supabase\.co" public/config.js | head -1)
+          KEY=$(grep -o "eyJ[A-Za-z0-9._-]*" public/config.js | head -1)
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then echo "config.js not filled yet - skipping"; exit 0; fi
+          curl -fsS "$URL/rest/v1/workspaces?select=id&limit=1" -H "apikey: $KEY" -o /dev/null && echo "Supabase is awake"
