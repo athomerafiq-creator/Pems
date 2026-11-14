@@ -514,6 +514,16 @@ revoke all on all tables in schema public from anon;
 grant select, insert, update, delete on all tables in schema public to authenticated;
 grant usage, select on all sequences in schema public to authenticated;
 grant execute on all functions in schema public to authenticated;
+-- tighten function access (security advisor)
+alter function public.chan_ok(text) set search_path = public;
+alter function public.pems_principal_email() set search_path = public;
+alter function public.can_view(text) set search_path = public;
+alter function public.can_edit(text) set search_path = public;
+alter function public.rec_ok(text,text,text) set search_path = public;
+alter function public.rec_write(text,text,text) set search_path = public;
+revoke execute on all functions in schema public from public, anon;
+revoke execute on function public.guard_record(), public.guard_task(), public.guard_transaction(), public.guard_attendance(), public.handle_new_user() from authenticated;
+alter default privileges in schema public revoke execute on functions from public, anon;
 
 -- ---------- 8. File storage (private) --------------------------------
 insert into storage.buckets (id, name, public) values ('pems-files', 'pems-files', false)
