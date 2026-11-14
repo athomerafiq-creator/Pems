@@ -264,6 +264,7 @@ const LEVELS={none:0,view:1,entry:1.5,edit:2};
 /* ---------- Supabase data layer ---------- */
 const CFG=window.PEMS_CONFIG||{};
 const LINK_TYPE=(location.hash.match(/type=([a-z_]+)/)||[])[1]||'';
+const LINK_ERR=(location.hash+location.search).match(/error_code=([a-z_]+)/)?RegExp.$1:'';
 let sb=null,MYUID=null,ME='p';
 let UID={},SLOT={};
 let S={settings:{view:'BDT',rate:123,late:'09:30',tz:'Asia/Dhaka'},notify:{on:true,email:'',cal:true,calEmail:'',ev:{}},perms:{},focus:[],appts:[],tasks:[],contacts:[],docs:[],tx:[],meetings:[],travel:[],staff:[],incentives:[],att:[],chat:[],warnings:[],audit:[],outbox:[],reportRuns:[],payRuns:[],chatSeen:{},archived:[],workspaces:[]};
@@ -335,7 +336,7 @@ function showAuth(mode,msg){const el=$('#auth');if(!mode){el.classList.remove('o
  const head=`<div style="display:flex;gap:12px;align-items:center"><svg width="44" height="36" viewBox="0 0 54 44"><path d="M4 14l11 10 12-20 12 20 11-10-5 24H9z" fill="#f5b942"/><rect x="9" y="38" width="36" height="5" rx="2" fill="#f5b942"/></svg><div><b style="font-size:22px;color:#f5b942">PEMS</b><div class="muted" style="font-size:12px">Personal Executive Management System</div></div></div>`;
  const V={
   login:`<h2 class="mt">Sign in</h2><p>Use the email your invitation was sent to.</p><form onsubmit="event.preventDefault();doLogin()"><label>Email</label><input class="inp" id="aEmail" type="email" autocomplete="username" required><label>Password</label><input class="inp" id="aPass" type="password" autocomplete="current-password" required><button class="btn" id="aBtn">Sign in</button></form><div class="err" id="aErr">${esc(msg||'')}</div><a onclick="showAuth('forgot')">Forgot password?</a>`,
-  forgot:`<h2 class="mt">Reset password</h2><p>We will email you a link to set a new password.</p><form onsubmit="event.preventDefault();doForgot()"><label>Email</label><input class="inp" id="aEmail" type="email" required><button class="btn" id="aBtn">Send reset link</button></form><div class="err" id="aErr"></div><a onclick="showAuth('login')">← Back to sign in</a>`,
+  forgot:`<h2 class="mt">Reset password</h2><p>${esc(msg||'We will email you a link to set a new password.')}</p><form onsubmit="event.preventDefault();doForgot()"><label>Email</label><input class="inp" id="aEmail" type="email" required><button class="btn" id="aBtn">Send reset link</button></form><div class="err" id="aErr"></div><a onclick="showAuth('login')">← Back to sign in</a>`,
   setpw:`<h2 class="mt">Set your password</h2><p>At least 10 characters. Use something only you know.</p><form onsubmit="event.preventDefault();doSetPw()"><label>New password</label><input class="inp" id="aP1" type="password" autocomplete="new-password" minlength="10" required><label>Repeat password</label><input class="inp" id="aP2" type="password" autocomplete="new-password" minlength="10" required><button class="btn" id="aBtn">Save password</button></form><div class="err" id="aErr"></div>`,
   revoked:`<h2 class="mt">No access</h2><p>This account is turned off or not set up yet. Please contact the Principal.</p><button class="btn ghost" onclick="sb.auth.signOut().then(()=>location.reload())">Sign out</button>`,
   setup:`<h2 class="mt">Almost ready</h2><p>Open <b>config.js</b> and paste the Supabase Project URL and anon key (see docs/SETUP.md).</p>`,
@@ -344,7 +345,7 @@ function showAuth(mode,msg){const el=$('#auth');if(!mode){el.classList.remove('o
  B.innerHTML=head+(V[mode]||V.login);const f=B.querySelector('input');if(f)setTimeout(()=>f.focus(),50)}
 const aBusy=(on,t)=>{const b=$('#aBtn');if(b){b.disabled=on;if(t)b.textContent=t}};
 async function doLogin(){aBusy(true,'Signing in…');const r=await sb.auth.signInWithPassword({email:$('#aEmail').value.trim(),password:$('#aPass').value});if(r.error){aBusy(false,'Sign in');$('#aErr').textContent=r.error.message==='Invalid login credentials'?'Wrong email or password.':r.error.message;return}start(r.data.session)}
-async function doForgot(){aBusy(true,'Sending…');const r=await sb.auth.resetPasswordForEmail($('#aEmail').value.trim(),{redirectTo:location.origin+location.pathname});aBusy(false,'Send reset link');$('#aErr').style.color=r.error?'':'#86efac';$('#aErr').textContent=r.error?r.error.message:'Check your email for the link.'}
+async function doForgot(){aBusy(true,'Sending…');const r=await sb.auth.resetPasswordForEmail($('#aEmail').value.trim(),{redirectTo:location.origin+location.pathname});aBusy(false,'Send reset link');$('#aErr').style.color=r.error?'':'#86efac';$('#aErr').textContent=r.error?(/rate limit/i.test(r.error.message)?'Too many emails were sent in the last hour. Please try again in about an hour.':r.error.message):'Check your email (and Spam folder) for the link.'}
 async function doSetPw(){const a=$('#aP1').value,b=$('#aP2').value;if(a!==b){$('#aErr').textContent='The two passwords do not match.';return}aBusy(true,'Saving…');const r=await sb.auth.updateUser({password:a});if(r.error){aBusy(false,'Save password');$('#aErr').textContent=r.error.message;return}history.replaceState(null,'',location.pathname);const {data}=await sb.auth.getSession();toast('Password saved');start(data.session)}
 
 /* ---------- start-up ---------- */
@@ -354,7 +355,7 @@ async function boot(){
  sb=window.supabase.createClient(CFG.url,CFG.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
  sb.auth.onAuthStateChange((ev)=>{if(ev==='PASSWORD_RECOVERY')showAuth('setpw');if(ev==='SIGNED_OUT'&&_started)location.reload()});
  const {data:{session}}=await sb.auth.getSession();
- if(!session){showAuth('login');return}
+ if(!session){if(LINK_ERR){history.replaceState(null,'',location.pathname);showAuth('forgot','This link has expired or was already used. Enter your email to get a new link and set your password.');return}showAuth('login');return}
  if(LINK_TYPE==='invite'||LINK_TYPE==='recovery'){showAuth('setpw');return}
  start(session)}
 async function start(session){if(!session){showAuth('login');return}MYUID=session.user.id;showAuth(null);$('#page').innerHTML='<div class="empty">Loading…</div>';
