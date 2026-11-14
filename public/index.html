@@ -196,7 +196,7 @@ tr.click{cursor:pointer}tr.click:hover td{background:#12204099}
   <div class="me">
    <div class="row"><div class="av" id="meAv"></div><div><b id="meName"></b><div class="muted" id="meRole" style="font-size:13px"></div></div></div>
    <div class="online"><span class="dot"></span> Online</div>
-   <button class="btn ghost" id="signout" style="width:100%;margin-top:12px">⎋ Sign out</button>
+   <button class="btn ghost" onclick="showAuth('setpw')" style="width:100%;margin-top:12px">🔑 Change password</button><button class="btn ghost" id="signout" style="width:100%;margin-top:8px">⎋ Sign out</button>
   </div>
  </aside>
  <main class="main">
@@ -338,7 +338,7 @@ function showAuth(mode,msg){const el=$('#auth');if(!mode){el.classList.remove('o
  const V={
   login:`<h2 class="mt">Sign in</h2><p>Use the email your invitation was sent to.</p><form onsubmit="event.preventDefault();doLogin()"><label>Email</label><input class="inp" id="aEmail" type="email" autocomplete="username" required><label>Password</label><input class="inp" id="aPass" type="password" autocomplete="current-password" required><button class="btn" id="aBtn">Sign in</button></form><div class="err" id="aErr">${esc(msg||'')}</div><a onclick="showAuth('forgot')">Forgot password?</a>`,
   forgot:`<h2 class="mt">Reset password</h2><p>${esc(msg||'We will email you a link to set a new password.')}</p><form onsubmit="event.preventDefault();doForgot()"><label>Email</label><input class="inp" id="aEmail" type="email" required><button class="btn" id="aBtn">Send reset link</button></form><div class="err" id="aErr"></div><a onclick="showAuth('login')">← Back to sign in</a>`,
-  setpw:`<h2 class="mt">Set your password</h2><p>At least 10 characters. Use something only you know.</p><form onsubmit="event.preventDefault();doSetPw()"><label>New password</label><input class="inp" id="aP1" type="password" autocomplete="new-password" minlength="10" required><label>Repeat password</label><input class="inp" id="aP2" type="password" autocomplete="new-password" minlength="10" required><button class="btn" id="aBtn">Save password</button></form><div class="err" id="aErr"></div>`,
+  setpw:`${_started?'<a style="float:right;margin-top:14px" onclick="showAuth(null)">✕ Cancel</a>':''}<h2 class="mt">Set your password</h2><p>At least 10 characters. Use something only you know.</p><form onsubmit="event.preventDefault();doSetPw()"><label>New password</label><input class="inp" id="aP1" type="password" autocomplete="new-password" minlength="10" required><label>Repeat password</label><input class="inp" id="aP2" type="password" autocomplete="new-password" minlength="10" required><button class="btn" id="aBtn">Save password</button></form><div class="err" id="aErr"></div>`,
   revoked:`<h2 class="mt">No access</h2><p>This account is turned off or not set up yet. Please contact the Principal.</p><button class="btn ghost" onclick="sb.auth.signOut().then(()=>location.reload())">Sign out</button>`,
   setup:`<h2 class="mt">Almost ready</h2><p>Open <b>config.js</b> and paste the Supabase Project URL and anon key (see docs/SETUP.md).</p>`,
   error:`<h2 class="mt">Could not load</h2><p>${esc(msg||'Please check your connection and try again.')}</p><button class="btn" onclick="location.reload()">Try again</button>`
@@ -347,7 +347,7 @@ function showAuth(mode,msg){const el=$('#auth');if(!mode){el.classList.remove('o
 const aBusy=(on,t)=>{const b=$('#aBtn');if(b){b.disabled=on;if(t)b.textContent=t}};
 async function doLogin(){aBusy(true,'Signing in…');const r=await sb.auth.signInWithPassword({email:$('#aEmail').value.trim(),password:$('#aPass').value});if(r.error){aBusy(false,'Sign in');$('#aErr').textContent=r.error.message==='Invalid login credentials'?'Wrong email or password.':r.error.message;return}start(r.data.session)}
 async function doForgot(){aBusy(true,'Sending…');const r=await sb.auth.resetPasswordForEmail($('#aEmail').value.trim(),{redirectTo:location.origin+location.pathname});aBusy(false,'Send reset link');$('#aErr').style.color=r.error?'':'#86efac';$('#aErr').textContent=r.error?(/rate limit/i.test(r.error.message)?'Too many emails were sent in the last hour. Please try again in about an hour.':r.error.message):'Check your email (and Spam folder) for the link.'}
-async function doSetPw(){const a=$('#aP1').value,b=$('#aP2').value;if(a!==b){$('#aErr').textContent='The two passwords do not match.';return}aBusy(true,'Saving…');const r=await sb.auth.updateUser({password:a});if(r.error){aBusy(false,'Save password');$('#aErr').textContent=r.error.message;return}history.replaceState(null,'',location.pathname);const {data}=await sb.auth.getSession();toast('Password saved');start(data.session)}
+async function doSetPw(){const a=$('#aP1').value,b=$('#aP2').value;if(a!==b){$('#aErr').textContent='The two passwords do not match.';return}aBusy(true,'Saving…');const r=await sb.auth.updateUser({password:a});if(r.error){aBusy(false,'Save password');$('#aErr').textContent=r.error.message;return}history.replaceState(null,'',location.pathname);const {data}=await sb.auth.getSession();toast('Password saved');if(_started){showAuth(null);return}start(data.session)}
 
 /* ---------- start-up ---------- */
 let _started=false;
