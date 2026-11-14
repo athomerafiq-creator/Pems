@@ -240,7 +240,7 @@ const WS=['Big7Placements','AGL Group','Consulting & Partnerships','Personal Aff
 const WS_COL={'Big7Placements':'#2f6bff','AGL Group':'#22c55e','Consulting & Partnerships':'#8b5cf6','Personal Affairs':'#f59e0b'};
 let USERS={};
 const ALLU=()=>Object.keys(USERS).filter(k=>k!=='x');
-const ASSIST=()=>ALLU().filter(k=>k!=='p');
+const ASSIST=()=>ALLU().filter(k=>/^pa\d/.test(k));
 const IC={
  dashboard:'<path d="M3 11l9-8 9 8v10a1 1 0 01-1 1h-5v-7H9v7H4a1 1 0 01-1-1z" fill="currentColor"/>',
  calendar:'<rect x="3" y="4" width="18" height="17" rx="2" fill="currentColor"/><path d="M3 9h18" stroke="#081127" stroke-width="2"/><path d="M8 2v4M16 2v4" stroke="currentColor" stroke-width="2"/><g fill="#081127"><rect x="6" y="12" width="3" height="3"/><rect x="11" y="12" width="3" height="3"/><rect x="16" y="12" width="2" height="3"/></g>',
@@ -300,7 +300,8 @@ async function loadTable(ek){const rows=await q(sb.from(MAP[ek].t).select('*').o
 async function loadMeta(){
  const [prof,ws,perm,wsa,set]=await Promise.all([q(sb.from('profiles').select('*').order('created_at')),q(sb.from('workspaces').select('*').order('created_at')),q(sb.from('permissions').select('*')),q(sb.from('workspace_access').select('*')),q(sb.from('app_settings').select('*'))]);
  USERS={x:{name:'Former user',role:'',col:'#475569',email:'',active:false}};UID={};SLOT={};let n=0;
- prof.filter(p=>p.role==='principal').concat(prof.filter(p=>p.role!=='principal')).forEach(p=>{const k=p.role==='principal'?'p':'pa'+(++n);USERS[k]={name:p.name||p.email,role:p.title||(p.role==='principal'?'Principal':'Assistant'),col:p.color||'#0e7490',email:p.email,active:p.active};UID[k]=p.id;SLOT[p.id]=k});
+ const meP=prof.find(p=>p.id===MYUID&&p.role==='principal');const firstP=meP||prof.find(p=>p.role==='principal');let pn=0;
+ prof.filter(p=>p.role==='principal').concat(prof.filter(p=>p.role!=='principal')).forEach(p=>{const k=p===firstP?'p':p.role==='principal'?'pp'+(++pn):'pa'+(++n);USERS[k]={name:p.name||p.email,role:p.title||(p.role==='principal'?'Principal':'Assistant'),col:p.color||'#0e7490',email:p.email,active:p.active};UID[k]=p.id;SLOT[p.id]=k});
  if(!SLOT[MYUID])throw new Error('noprofile');
  ME=SLOT[MYUID];
  S.workspaces=ws.map(w=>({name:w.name,col:w.color}));WS.splice(0,WS.length,...S.workspaces.map(w=>w.name));S.workspaces.forEach(w=>WS_COL[w.name]=w.col);
