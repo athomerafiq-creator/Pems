@@ -18,7 +18,7 @@ with sync_playwright() as p:
         ctx.add_init_script(pre)
         pg = ctx.new_page()
         pg.on('pageerror', lambda e, w=who: errs.append(f'{w}: {e}'))
-        pg.goto('file://' + ROOT + '/index.html'); pg.wait_for_timeout(600)
+        pg.goto('file://' + ROOT + '/public/index.html'); pg.wait_for_timeout(600)
         if who == 'noauth':
             assert pg.is_visible('#aEmail'), 'login screen not shown'
             pg.fill('#aEmail', 'a@b.c'); pg.fill('#aPass', 'x'); pg.click('#aBtn'); pg.wait_for_timeout(500)

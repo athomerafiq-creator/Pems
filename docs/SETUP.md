@@ -28,7 +28,7 @@ Supabase → **Authentication** → **Sign In / Providers** (or *Providers*) →
 1. **dash.cloudflare.com** → **Workers & Pages** → **Create** → **Pages** →
    **Connect to Git** → connect GitHub → choose the **Pems** repository.
 2. Build settings: Framework preset **None**, Build command **(empty)**,
-   Build output directory **/** → **Save and Deploy**.
+   Build output directory **public** (if Cloudflare creates a *Worker* instead, `wrangler.jsonc` already tells it to serve the `public` folder) → **Save and Deploy**.
 3. You get an address like `https://pems-xxx.pages.dev`. Copy it.
 
 ## Step 4 — Connect the app to the database
@@ -37,7 +37,7 @@ Supabase → **Authentication** → **Sign In / Providers** (or *Providers*) →
    * **Project URL** (e.g. `https://abcd1234.supabase.co`)
    * **anon public** key (long text starting `eyJ...`)
      — *not* the `service_role` key.
-2. Send those two values to the developer, **or** edit `config.js` in GitHub
+2. Send those two values to the developer, **or** edit `public/config.js` in GitHub
    (pencil icon) and paste them between the quotes → *Commit changes*.
    Cloudflare redeploys automatically in about a minute.
 3. Supabase → **Authentication** → **URL Configuration**:

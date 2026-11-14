@@ -6,7 +6,7 @@ official warnings, travel, weekly reports (PDF/Excel) — one secure web app.
 
 | Part | Where it runs | Cost |
 |---|---|---|
-| Web app (`index.html`, `config.js`) | Cloudflare Pages | Free |
+| Web app (`public/`) | Cloudflare Workers (static assets) | Free |
 | Database, logins, files, live chat (`supabase/schema.sql`) | Supabase | Free tier |
 | Source code & daily keep-alive | GitHub (this repo) | Free |
 
@@ -23,8 +23,9 @@ Files live in a private bucket and open only through 2-minute signed links.
 
 ## Layout
 ```
-index.html            the whole app (no build step)
-config.js             Supabase URL + anon key (public by design)
+public/index.html     the whole app (no build step)
+public/config.js      Supabase URL + anon key (public by design)
+wrangler.jsonc        Cloudflare Workers config (serves ./public)
 supabase/schema.sql   database, security rules, storage, realtime
 docs/SETUP.md         step-by-step setup and backup guide
 tests/                security tests + browser smoke test

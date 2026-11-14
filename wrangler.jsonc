@@ -1,0 +1,9 @@
+{
+  // Cloudflare Workers static site: serves only the files in ./public
+  "name": "pems",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./public",
+    "not_found_handling": "single-page-application"
+  }
+}
